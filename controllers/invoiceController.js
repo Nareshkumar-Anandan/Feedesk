@@ -42,7 +42,7 @@ exports.generateInvoicePdfInternal = async (data) => {
       doc.fillColor('#FFFFFF')
          .fontSize(18)
          .font('Helvetica-Bold')
-         .text('HINDUSTHAN COLLEGE OF ARTS AND SCIENCE', 40, 22);
+         .text('HINDUSTHAN ADVANCED STUDY', 40, 22);
       doc.fontSize(9.5)
          .font('Helvetica')
          .text('Avinashi Road, Nava India, Udayampalayam, Coimbatore, Tamil Nadu 641028', 40, 48);
@@ -120,7 +120,7 @@ exports.generateInvoicePdfInternal = async (data) => {
       // Signature Placeholder
       doc.fillColor('#0F4C81').fontSize(10).font('Helvetica-Bold');
       doc.text('Authorized Finance Controller', 380, summaryTop + 130, { align: 'right' });
-      doc.fontSize(8).fillColor('#64748B').text('Hindusthan College of Arts and Science', 380, summaryTop + 145, { align: 'right' });
+      doc.fontSize(8).fillColor('#64748B').text('Hindusthan Advanced Study', 380, summaryTop + 145, { align: 'right' });
 
       doc.end();
 

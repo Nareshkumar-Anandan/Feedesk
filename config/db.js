@@ -20,7 +20,7 @@ class FallbackStore {
       payment_history: [],
       invoices: [],
       settings: [
-        { setting_key: 'institution_name', setting_value: 'Hindusthan College of Arts and Science' },
+        { setting_key: 'institution_name', setting_value: 'Hindusthan Advanced Study' },
         { setting_key: 'institution_address', setting_value: 'Avinashi Rd, behind Nava India, Udayampalayam, Tamil Nadu 641028' },
         { setting_key: 'institution_phone', setting_value: '+91 98431 33333' },
         { setting_key: 'institution_email', setting_value: 'info@hindusthan.net' },
@@ -861,7 +861,7 @@ async function autoInitMySQL(host, user, password, port, dbName) {
 
     // Ensure default settings exist
     const defaultSettings = [
-      ['institution_name', 'Hindusthan College of Arts and Science'],
+      ['institution_name', 'Hindusthan Advanced Study'],
       ['institution_address', 'Avinashi Rd, behind Nava India, Udayampalayam, Tamil Nadu 641028'],
       ['institution_phone', '+91 98431 33333'],
       ['institution_email', 'info@hindusthan.net'],
