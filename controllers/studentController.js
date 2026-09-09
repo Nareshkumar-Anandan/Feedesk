@@ -1,0 +1,367 @@
+const bcrypt = require('bcryptjs');
+const ExcelJS = require('exceljs');
+const { query } = require('../config/db');
+
+// Helper to reliably parse DOB (DD-MM-YYYY, YYYY-MM-DD, DD/MM/YYYY, Excel serials)
+function parseAndFormatDob(rawDob) {
+  let formattedDob = '2005-08-15';
+  let cleanPasswordDigits = '15082005';
+
+  if (!rawDob) return { formattedDob, cleanPasswordDigits };
+
+  // If number or numeric string (Excel serial date)
+  if (typeof rawDob === 'number' || (!isNaN(rawDob) && !String(rawDob).includes('-') && !String(rawDob).includes('/'))) {
+    const num = Number(rawDob);
+    const dateObj = new Date(Math.round((num - 25569) * 86400 * 1000));
+    if (!isNaN(dateObj.getTime())) {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      formattedDob = `${year}-${month}-${day}`;
+      cleanPasswordDigits = `${day}${month}${year}`;
+      return { formattedDob, cleanPasswordDigits };
+    }
+  }
+
+  const str = String(rawDob).trim();
+  const parts = str.split(/[-/.]/);
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      const year = parts[0];
+      const month = parts[1].padStart(2, '0');
+      const day = parts[2].padStart(2, '0');
+      formattedDob = `${year}-${month}-${day}`;
+      cleanPasswordDigits = `${day}${month}${year}`;
+    } else if (parts[2].length === 4) {
+      // DD-MM-YYYY
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      formattedDob = `${year}-${month}-${day}`;
+      cleanPasswordDigits = `${day}${month}${year}`;
+    }
+  }
+
+  return { formattedDob, cleanPasswordDigits };
+}
+
+// Get all students (Admin) with search and filters
+exports.getAllStudents = async (req, res) => {
+  try {
+    const { search, department, academic_year, section } = req.query;
+    let [students] = await query('SELECT id, student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, created_at FROM students ORDER BY id DESC');
+
+    if (search) {
+      const q = search.toLowerCase();
+      students = students.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.roll_number.toLowerCase().includes(q) ||
+        s.student_id.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q)
+      );
+    }
+
+    if (department) {
+      students = students.filter(s => s.department === department);
+    }
+
+    if (academic_year) {
+      students = students.filter(s => s.academic_year === academic_year);
+    }
+
+    if (section) {
+      students = students.filter(s => s.section === section);
+    }
+
+    res.json({ success: true, count: students.length, data: students });
+  } catch (error) {
+    console.error('Get Students Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch students list.' });
+  }
+};
+
+// Get single student by ID
+exports.getStudentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await query('SELECT id, student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, created_at FROM students WHERE id = ?', [id]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    res.json({ success: true, data: rows[0] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch student details.' });
+  }
+};
+
+// Create new student (Admin)
+exports.createStudent = async (req, res) => {
+  try {
+    const {
+      student_id, roll_number, name, department, academic_year, course_name,
+      section, dob, gender, blood_group, father_name, mother_name,
+      father_occupation, mother_occupation, phone, parent_phone, email, address
+    } = req.body;
+
+    if (!roll_number || !name || !email || !dob) {
+      return res.status(400).json({ success: false, message: 'Required fields: Roll Number, Name, Email, DOB.' });
+    }
+
+    const genStudentId = student_id || `STU${Date.now()}`;
+    const photo_url = req.file ? `/uploads/${req.file.filename}` : '';
+
+    const { formattedDob, cleanPasswordDigits } = parseAndFormatDob(dob);
+    const hashedPassword = await bcrypt.hash(cleanPasswordDigits, 10);
+
+    const [result] = await query(
+      `INSERT INTO students 
+      (student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, password) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        genStudentId, roll_number, name, department || 'General', academic_year || '2025',
+        course_name || '', section || 'A', formattedDob, gender || 'Male', blood_group || 'O+',
+        father_name || '', mother_name || '', father_occupation || '', mother_occupation || '',
+        phone || '', parent_phone || '', email, address || '', photo_url, hashedPassword
+      ]
+    );
+
+    const newStudentId = result.insertId || Date.now();
+
+    // Auto-assign course in student_courses table
+    let [courses] = await query('SELECT * FROM courses');
+    if (courses && courses.length > 0) {
+      const matchedCourse = courses.find(c => (c.course_name || '').toLowerCase() === (course_name || '').toLowerCase()) || courses[0];
+      if (matchedCourse) {
+        await query(
+          `INSERT INTO student_courses 
+          (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+          VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+          [newStudentId, matchedCourse.id, matchedCourse.fee, matchedCourse.fee, matchedCourse.start_date || '2026-08-15']
+        );
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Student registered and course assigned successfully!',
+      studentId: newStudentId
+    });
+  } catch (error) {
+    console.error('Create Student Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to register student. Email or Roll Number may already exist.' });
+  }
+};
+
+// Update student profile (Admin: Full update, Student: phone/email/address only)
+exports.updateStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      roll_number, name, department, course_name, dob,
+      father_name, father_occupation, mother_name, mother_occupation,
+      phone, parent_phone, email, address
+    } = req.body;
+
+    const isStudent = req.user.role === 'student';
+    if (isStudent && Number(req.user.id) !== Number(id)) {
+      return res.status(403).json({ success: false, message: 'Unauthorized profile modification.' });
+    }
+
+    if (isStudent) {
+      await query(
+        'UPDATE students SET phone = ?, email = ?, address = ? WHERE id = ?',
+        [phone || '', email || '', address || '', id]
+      );
+    } else {
+      await query(
+        `UPDATE students 
+         SET roll_number = ?, name = ?, department = ?, course_name = ?, dob = ?,
+             father_name = ?, father_occupation = ?, mother_name = ?, mother_occupation = ?,
+             phone = ?, parent_phone = ?, email = ?, address = ?
+         WHERE id = ?`,
+        [
+          roll_number, name, department || '', course_name || '', dob,
+          father_name || '', father_occupation || '', mother_name || '', mother_occupation || '',
+          phone || '', parent_phone || '', email || '', address || '', id
+        ]
+      );
+    }
+
+    res.json({ success: true, message: 'Student profile updated successfully!' });
+  } catch (error) {
+    console.error('Update Student Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update student profile.' });
+  }
+};
+
+// Delete student (Admin)
+exports.deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM students WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Student record deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to delete student.' });
+  }
+};
+
+// Reset password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { new_password } = req.body;
+
+    const [rows] = await query('SELECT dob FROM students WHERE id = ?', [id]);
+    if (!rows || rows.length === 0) return res.status(404).json({ success: false, message: 'Student not found.' });
+
+    const passwordToUse = new_password || rows[0].dob.toString().split('-').reverse().join('');
+    const hashedPassword = await bcrypt.hash(passwordToUse, 10);
+
+    await query('UPDATE students SET password = ? WHERE id = ?', [hashedPassword, id]);
+    res.json({ success: true, message: `Password reset successfully. Default password is ${passwordToUse}` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to reset password.' });
+  }
+};
+
+// Export Students to Excel
+exports.exportStudentsExcel = async (req, res) => {
+  try {
+    const [students] = await query('SELECT student_id, roll_number, name, department, academic_year, course_name, section, dob, phone, email FROM students');
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Students List');
+
+    worksheet.columns = [
+      { header: 'Student ID', key: 'student_id', width: 15 },
+      { header: 'Roll Number', key: 'roll_number', width: 15 },
+      { header: 'Name', key: 'name', width: 25 },
+      { header: 'Department', key: 'department', width: 20 },
+      { header: 'Academic Year', key: 'academic_year', width: 15 },
+      { header: 'Course', key: 'course_name', width: 20 },
+      { header: 'Section', key: 'section', width: 10 },
+      { header: 'DOB', key: 'dob', width: 12 },
+      { header: 'Phone', key: 'phone', width: 15 },
+      { header: 'Email', key: 'email', width: 25 }
+    ];
+
+    students.forEach(student => worksheet.addRow(student));
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="students_list.xlsx"');
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export Excel Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to export students list.' });
+  }
+};
+
+// Bulk Import Students from Excel with Column Mappings
+exports.bulkImportStudents = async (req, res) => {
+  try {
+    const { students } = req.body;
+
+    if (!students || !Array.isArray(students) || students.length === 0) {
+      return res.status(400).json({ success: false, message: 'No student records provided for import.' });
+    }
+
+    let [courses] = await query('SELECT * FROM courses');
+    const defaultCourse = courses && courses.length > 0 ? courses[0] : null;
+
+    let importedCount = 0;
+    let skippedCount = 0;
+
+    for (const st of students) {
+      const name = (st.name || '').trim();
+      const rollNumber = (st.roll_number || '').trim();
+
+      if (!name || !rollNumber) {
+        skippedCount++;
+        continue;
+      }
+
+      const { formattedDob, cleanPasswordDigits } = parseAndFormatDob(st.dob);
+      const hashedPassword = await bcrypt.hash(cleanPasswordDigits, 10);
+      const studentId = `STU${Date.now()}_${Math.floor(100 + Math.random() * 900)}`;
+      const department = st.department || 'B.Com - Computer Applications';
+      const courseName = st.course_name || (defaultCourse ? defaultCourse.course_name : 'Skill Enhancement');
+      const email = st.email || `${rollNumber.toLowerCase()}@hindusthan.net`;
+      const phone = st.phone || '';
+      const gender = st.gender || 'Male';
+      const bloodGroup = st.blood_group || 'O+';
+      const fatherName = st.father_name || '';
+      const fatherOccupation = st.father_occupation || '';
+      const motherName = st.mother_name || '';
+      const motherOccupation = st.mother_occupation || '';
+      const parentPhone = st.parent_phone || '';
+      const address = st.address || '';
+      const academicYear = st.academic_year || '2025';
+      const section = st.section || 'A';
+
+      const [insertRes] = await query(
+        `INSERT INTO students 
+        (student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, password) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)
+        ON DUPLICATE KEY UPDATE 
+          name = VALUES(name),
+          department = VALUES(department),
+          academic_year = VALUES(academic_year),
+          course_name = VALUES(course_name),
+          section = VALUES(section),
+          dob = VALUES(dob),
+          gender = VALUES(gender),
+          blood_group = VALUES(blood_group),
+          father_name = VALUES(father_name),
+          mother_name = VALUES(mother_name),
+          father_occupation = VALUES(father_occupation),
+          mother_occupation = VALUES(mother_occupation),
+          phone = VALUES(phone),
+          parent_phone = VALUES(parent_phone),
+          address = VALUES(address)`,
+        [studentId, rollNumber, name, department, academicYear, courseName, section, formattedDob, gender, bloodGroup, fatherName, motherName, fatherOccupation, motherOccupation, phone, parentPhone, email, address, hashedPassword]
+      );
+
+      let studentDbId = insertRes.insertId || insertRes.id;
+      if (!studentDbId) {
+        const [found] = await query('SELECT id FROM students WHERE roll_number = ?', [rollNumber]);
+        if (found && found.length > 0) studentDbId = found[0].id;
+      }
+
+      if (defaultCourse && studentDbId) {
+        const assignedCourse = (courses || []).find(c => (c.course_name || '').toLowerCase() === courseName.toLowerCase()) || defaultCourse;
+        const [existingSc] = await query('SELECT id FROM student_courses WHERE student_id = ?', [studentDbId]);
+        if (!existingSc || existingSc.length === 0) {
+          await query(
+            `INSERT INTO student_courses 
+            (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+            VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+            [studentDbId, assignedCourse.id, assignedCourse.fee, assignedCourse.fee, assignedCourse.start_date || '2026-08-15']
+          );
+        } else {
+          await query(
+            `UPDATE student_courses SET course_id = ?, fee_amount = ?, final_amount = ? WHERE id = ?`,
+            [assignedCourse.id, assignedCourse.fee, assignedCourse.fee, existingSc[0].id]
+          );
+        }
+      }
+
+      importedCount++;
+    }
+
+    res.json({
+      success: true,
+      message: `Excel import successful! Imported ${importedCount} student records${skippedCount > 0 ? ` (${skippedCount} skipped due to missing required fields)` : ''}.`,
+      importedCount,
+      skippedCount
+    });
+  } catch (error) {
+    console.error('Bulk Import Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to import student records from Excel.', error: error.message });
+  }
+};
+

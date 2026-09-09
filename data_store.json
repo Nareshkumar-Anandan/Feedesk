@@ -1,0 +1,720 @@
+{
+  "admins": [
+    {
+      "id": 1,
+      "name": "System Super Admin",
+      "email": "developer@hindusthan.net",
+      "password": "$2a$10$iM.oBqFmD67Lh9g6mD3Mle8fWc13U3n44wV4L8aK26Hn.9f0q29q6",
+      "role": "super_admin",
+      "permissions": "ALL",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Nareshkumar Anandan",
+      "email": "nareshkumaranandan77@gmail.com",
+      "password": "$2a$10$Ak3ehpJLko1j.O9sh9HNaOzFSvC4g8ufjgv/eykTap7LzbStr9ZTa",
+      "role": "fee_counter",
+      "counter_location": "A Block - Ground Floor",
+      "permissions": "A Block - Ground Floor",
+      "created_at": "2026-09-01T09:49:49.356Z"
+    }
+  ],
+  "students": [
+    {
+      "id": 1,
+      "student_id": "STU1788418805627",
+      "roll_number": "24BCC077",
+      "name": "KAVIYA SRI J",
+      "department": "B.Com - Computer Applications",
+      "academic_year": "N/A",
+      "course_name": "Python pro",
+      "section": "N/A",
+      "dob": "2003-01-09",
+      "gender": "Male",
+      "blood_group": "O+",
+      "father_name": "",
+      "mother_name": "",
+      "phone": "123",
+      "parent_phone": "",
+      "email": "nareshkumaranandan77@gmail.com",
+      "address": "",
+      "photo_url": "pro@hindusthan.net",
+      "password": "",
+      "created_at": "2026-09-03T07:00:05.726Z",
+      "father_occupation": "",
+      "mother_occupation": ""
+    }
+  ],
+  "courses": [
+    {
+      "id": 1,
+      "course_name": "Skill Enhancement",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-06-01",
+      "end_date": "2026-12-01",
+      "max_students": 200,
+      "fee": 500,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:31:07.453Z"
+    },
+    {
+      "id": 2,
+      "course_name": "Python pro",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-06-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 1000,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:31:43.069Z"
+    },
+    {
+      "id": 3,
+      "course_name": "Advanced Excel",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 900,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:32:11.972Z"
+    },
+    {
+      "id": 4,
+      "course_name": "Capital Market Skill",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 1500,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:32:53.190Z"
+    },
+    {
+      "id": 5,
+      "course_name": "Digital Marketing",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 1500,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:34:15.637Z"
+    },
+    {
+      "id": 6,
+      "course_name": "PowerBI",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 500,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:35:19.390Z"
+    },
+    {
+      "id": 7,
+      "course_name": "Investment and Securities",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 500,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:36:08.892Z"
+    },
+    {
+      "id": 8,
+      "course_name": "AI in Bio Technology",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 750,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:38:02.875Z"
+    },
+    {
+      "id": 9,
+      "course_name": "Generative AI",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 1000,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:38:26.244Z"
+    },
+    {
+      "id": 10,
+      "course_name": "Share and Stock Market",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 1000,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:38:56.740Z"
+    },
+    {
+      "id": 11,
+      "course_name": "AI Tools W/S 3Days",
+      "description": "",
+      "trainer": "",
+      "duration": "",
+      "start_date": "2026-05-01",
+      "end_date": "2026-12-31",
+      "max_students": 200,
+      "fee": 750,
+      "image_url": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+      "status": "active",
+      "created_at": "2026-09-01T10:39:37.709Z"
+    }
+  ],
+  "student_courses": [
+    {
+      "id": 1,
+      "student_id": 1,
+      "course_id": 2,
+      "assigned_date": "2026-09-03T07:00:05.729Z",
+      "fee_amount": 1000,
+      "discount_amount": 1000,
+      "fine_amount": null,
+      "final_amount": null,
+      "payment_status": "pending",
+      "due_date": null,
+      "created_at": "2026-09-03T07:00:05.729Z"
+    },
+    {
+      "id": 2,
+      "student_id": 2,
+      "course_id": 1,
+      "assigned_date": "2026-09-03T09:36:56.498Z",
+      "fee_amount": 500,
+      "discount_amount": 500,
+      "fine_amount": null,
+      "final_amount": null,
+      "payment_status": "pending",
+      "due_date": null,
+      "created_at": "2026-09-03T09:36:56.498Z"
+    },
+    {
+      "id": 3,
+      "student_id": 3,
+      "course_id": 1,
+      "assigned_date": "2026-09-03T09:36:56.564Z",
+      "fee_amount": 500,
+      "discount_amount": 500,
+      "fine_amount": null,
+      "final_amount": null,
+      "payment_status": "pending",
+      "due_date": null,
+      "created_at": "2026-09-03T09:36:56.564Z"
+    },
+    {
+      "id": 4,
+      "student_id": 4,
+      "course_id": 4,
+      "assigned_date": "2026-09-03T09:36:56.635Z",
+      "fee_amount": 1500,
+      "discount_amount": 1500,
+      "fine_amount": null,
+      "final_amount": null,
+      "payment_status": "pending",
+      "due_date": null,
+      "created_at": "2026-09-03T09:36:56.635Z"
+    },
+    {
+      "id": 5,
+      "student_id": 5,
+      "course_id": 3,
+      "assigned_date": "2026-09-03T09:36:56.703Z",
+      "fee_amount": 900,
+      "discount_amount": 900,
+      "fine_amount": null,
+      "final_amount": null,
+      "payment_status": "pending",
+      "due_date": null,
+      "created_at": "2026-09-03T09:36:56.703Z"
+    }
+  ],
+  "payments": [],
+  "payment_history": [],
+  "invoices": [],
+  "settings": [
+    {
+      "setting_key": "institution_name",
+      "setting_value": "Hindusthan College of Arts and Science"
+    },
+    {
+      "setting_key": "institution_address",
+      "setting_value": "Avinashi Rd, behind Nava India, Udayampalayam, Tamil Nadu 641028"
+    },
+    {
+      "setting_key": "institution_phone",
+      "setting_value": "+91 98431 33333"
+    },
+    {
+      "setting_key": "institution_email",
+      "setting_value": "info@hindusthan.net"
+    },
+    {
+      "setting_key": "institution_website",
+      "setting_value": "https://www.hicas.ac.in"
+    },
+    {
+      "setting_key": "razorpay_key_id",
+      "setting_value": "rzp_test_mockkey12345"
+    },
+    {
+      "setting_key": "academic_year",
+      "setting_value": "2025-2026"
+    },
+    {
+      "setting_key": "pos_enabled",
+      "setting_value": "true"
+    },
+    {
+      "setting_key": "pos_machine_model",
+      "setting_value": "PAX A920 Axis Bank BonusHub"
+    },
+    {
+      "setting_key": "pos_ip_address",
+      "setting_value": "192.168.0.102"
+    },
+    {
+      "setting_key": "pos_port",
+      "setting_value": "8080"
+    },
+    {
+      "setting_key": "pos_terminal_id",
+      "setting_value": "15962442"
+    }
+  ],
+  "notifications": [],
+  "departments": [
+    {
+      "id": 1,
+      "department_name": "B.Com - Commerce",
+      "department_code": "B.COM",
+      "description": "Department of Commerce",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "department_name": "B.Com - Computer Applications",
+      "department_code": "B.COM CA",
+      "description": "Department of Commerce with Computer Applications",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "department_name": "B.Com - Information Technology",
+      "department_code": "B.COM IT",
+      "description": "Department of Commerce with Information Technology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "department_name": "B.Com - Corporate Secretaryship",
+      "department_code": "B.COM CS",
+      "description": "Department of Corporate Secretaryship",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "department_name": "B.Com - Professional Accounting",
+      "department_code": "B.COM PA",
+      "description": "Department of Professional Accounting",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "department_name": "B.Com - Accounting & Finance",
+      "department_code": "B.COM AF",
+      "description": "Department of Accounting and Finance",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 7,
+      "department_name": "B.Com - Banking & Insurance",
+      "department_code": "B.COM BI",
+      "description": "Department of Banking and Insurance",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 8,
+      "department_name": "B.Com - International Business",
+      "department_code": "B.COM IB",
+      "description": "Department of International Business",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 9,
+      "department_name": "B.Com - Fintech with Artificial Intelligence",
+      "department_code": "B.COM FT",
+      "description": "Department of Financial Technology with AI",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 10,
+      "department_name": "B.C.A - Computer Applications",
+      "department_code": "BCA",
+      "description": "Department of Computer Applications",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 11,
+      "department_name": "B.B.A - Business Administration",
+      "department_code": "BBA",
+      "description": "Department of Business Administration",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 12,
+      "department_name": "B.B.A - Computer Applications",
+      "department_code": "BBA CA",
+      "description": "Department of Business Administration with Computer Applications",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 13,
+      "department_name": "B.B.A - Logistics",
+      "department_code": "BBA LOG",
+      "description": "Department of Logistics and Supply Chain",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 14,
+      "department_name": "B.B.A - Business Analytics",
+      "department_code": "BBA BA",
+      "description": "Department of Business Analytics",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 15,
+      "department_name": "B.Voc - Graphic Design",
+      "department_code": "B.VOC GD",
+      "description": "Department of Graphic Design & Visual Art",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 16,
+      "department_name": "B.A - English",
+      "department_code": "BA ENG",
+      "description": "Department of English Literature",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 17,
+      "department_name": "B.Sc - Computer Science",
+      "department_code": "B.SC CS",
+      "description": "Department of Computer Science",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 18,
+      "department_name": "B.Sc - Information Technology",
+      "department_code": "B.SC IT",
+      "description": "Department of Information Technology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 19,
+      "department_name": "B.Sc - Computer Technology",
+      "department_code": "B.SC CT",
+      "description": "Department of Computer Technology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 20,
+      "department_name": "B.Sc - Computer Science with Cognitive Systems",
+      "department_code": "B.SC CS-COG",
+      "description": "Department of Computer Science with Cognitive Systems",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 21,
+      "department_name": "B.Sc - Artificial Intelligence & Machine Learning",
+      "department_code": "B.SC AIML",
+      "description": "Department of AI and Machine Learning",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 22,
+      "department_name": "B.Sc - Data Science & Analytics",
+      "department_code": "B.SC DS",
+      "description": "Department of Data Science and Analytics",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 23,
+      "department_name": "B.Sc - Computer Technology with Artificial Intelligence and Machine Learning",
+      "department_code": "B.SC CT-AI",
+      "description": "Department of Computer Technology with AI & ML",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 24,
+      "department_name": "B.Sc - Computer Science with Cyber Security",
+      "department_code": "B.SC CS-CYBER",
+      "description": "Department of Computer Science with Cyber Security",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 25,
+      "department_name": "B.Sc - Electronics & Communication Systems",
+      "department_code": "B.SC ECS",
+      "description": "Department of Electronics and Communication Systems",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 26,
+      "department_name": "B.Sc - Biotechnology",
+      "department_code": "B.SC BT",
+      "description": "Department of Biotechnology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 27,
+      "department_name": "B.Sc - Microbiology",
+      "department_code": "B.SC MB",
+      "description": "Department of Microbiology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 28,
+      "department_name": "B.Sc - Food Processing Technology & Management",
+      "department_code": "B.SC FPTM",
+      "description": "Department of Food Processing and Management",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 29,
+      "department_name": "B.Sc - Animation & Visual Effects",
+      "department_code": "B.SC VFX",
+      "description": "Department of Animation and Visual Effects",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 30,
+      "department_name": "B.Sc - Visual Communication",
+      "department_code": "B.SC VISCOM",
+      "description": "Department of Visual Communication",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 31,
+      "department_name": "B.Sc - Catering Science & Hotel Management",
+      "department_code": "B.SC CSHM",
+      "description": "Department of Catering Science and Hotel Management",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 32,
+      "department_name": "B.Sc - Costume Design & Fashion",
+      "department_code": "B.SC CDF",
+      "description": "Department of Costume Design and Fashion",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 33,
+      "department_name": "B.Sc - Psychology",
+      "department_code": "B.SC PSY",
+      "description": "Department of Psychology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 34,
+      "department_name": "M.Sc - Biotechnology",
+      "department_code": "M.SC BT",
+      "description": "Postgraduate Department of Biotechnology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 35,
+      "department_name": "M.Sc - Microbiology",
+      "department_code": "M.SC MB",
+      "description": "Postgraduate Department of Microbiology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 36,
+      "department_name": "M.Sc - Computer Science",
+      "department_code": "M.SC CS",
+      "description": "Postgraduate Department of Computer Science",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 37,
+      "department_name": "M.Sc - Information Technology",
+      "department_code": "M.SC IT",
+      "description": "Postgraduate Department of Information Technology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 38,
+      "department_name": "M.Sc - Electronics & Communication Systems",
+      "department_code": "M.SC ECS",
+      "description": "Postgraduate Department of Electronics and Communication Systems",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 39,
+      "department_name": "M.Sc - Physics",
+      "department_code": "M.SC PHY",
+      "description": "Postgraduate Department of Physics",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 40,
+      "department_name": "M.Sc - Costume Design & Fashion",
+      "department_code": "M.SC CDF",
+      "description": "Postgraduate Department of Costume Design and Fashion",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 41,
+      "department_name": "M.Sc - Mathematics",
+      "department_code": "M.SC MAT",
+      "description": "Postgraduate Department of Mathematics",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 42,
+      "department_name": "M.Sc - Visual Communication",
+      "department_code": "M.SC VISCOM",
+      "description": "Postgraduate Department of Visual Communication",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 43,
+      "department_name": "M.Sc - Applied Psychology",
+      "department_code": "M.SC PSY",
+      "description": "Postgraduate Department of Applied Psychology",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 44,
+      "department_name": "M.A - English",
+      "department_code": "MA ENG",
+      "description": "Postgraduate Department of English Literature",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 45,
+      "department_name": "M.S.W - Master of Social Work",
+      "department_code": "MSW",
+      "description": "Department of Social Work",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 46,
+      "department_name": "M.Com - Computer Applications",
+      "department_code": "M.COM CA",
+      "description": "Postgraduate Department of Commerce with Computer Applications",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 47,
+      "department_name": "M.Com - International Business",
+      "department_code": "M.COM IB",
+      "description": "Postgraduate Department of Commerce with International Business",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 48,
+      "department_name": "M.B.A - Master of Business Administration",
+      "department_code": "MBA",
+      "description": "School of Management Studies",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "id": 49,
+      "department_name": "M.C.A - Master of Computer Applications",
+      "department_code": "MCA",
+      "description": "Department of Master of Computer Applications",
+      "status": "active",
+      "created_at": "2026-09-01T00:00:00.000Z"
+    }
+  ]
+}
