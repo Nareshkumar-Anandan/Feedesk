@@ -810,6 +810,7 @@ async function autoInitMySQL(host, user, password, port, dbName) {
         FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+    // summa
 
     await conn.query(`
       CREATE TABLE IF NOT EXISTS invoices (
@@ -918,10 +919,10 @@ async function getDbConnection() {
     const connection = await pool.getConnection();
     connection.release();
     console.log('✅ Connected to MySQL Database successfully.');
-    
+
     // Auto sync any historical records with GST to pure base course fee
-    pool.query('UPDATE payments SET gst_amount = 0, total_amount = amount WHERE gst_amount > 0').catch(() => {});
-    pool.query('UPDATE invoices SET gst_amount = 0, total_amount = amount WHERE gst_amount > 0').catch(() => {});
+    pool.query('UPDATE payments SET gst_amount = 0, total_amount = amount WHERE gst_amount > 0').catch(() => { });
+    pool.query('UPDATE invoices SET gst_amount = 0, total_amount = amount WHERE gst_amount > 0').catch(() => { });
 
     dbPool = pool;
     return dbPool;
