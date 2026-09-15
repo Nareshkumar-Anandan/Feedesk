@@ -271,8 +271,8 @@ exports.recordOfflinePayment = async (req, res) => {
     const [payResult] = await query(
       `INSERT INTO payments 
       (invoice_number, student_id, course_id, amount, gst_amount, total_amount, payment_mode, transaction_id, status, remarks, payment_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'success', ?, ?)`,
-      [invoiceNumber, Number(student_id), Number(course_id), baseAmount, gstAmount, totalAmount, payment_mode, txnId, remarks || 'Offline payment recorded at Counter', effectivePaymentDate]
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [invoiceNumber, Number(student_id), Number(course_id), baseAmount, gstAmount, totalAmount, payment_mode, txnId, 'success', remarks || 'Offline payment recorded at Counter', effectivePaymentDate]
     );
 
     const paymentId = payResult.insertId;
@@ -325,7 +325,7 @@ exports.getPaymentsList = async (req, res) => {
     const isStudent = req.user.role === 'student';
     const studentId = isStudent ? req.user.id : req.query.student_id;
 
-    let [payments] = await query('SELECT p.*, s.name as student_name, s.roll_number, s.department, c.course_name FROM payments p JOIN students s ON p.student_id = s.id JOIN courses c ON p.course_id = c.id ORDER BY p.id DESC');
+    let [payments] = await query('SELECT p.*, s.name as student_name, s.roll_number, s.department, c.course_name FROM payments p LEFT JOIN students s ON p.student_id = s.id LEFT JOIN courses c ON p.course_id = c.id ORDER BY COALESCE(p.payment_date, p.created_at) DESC, p.id DESC');
 
     if (studentId) {
       payments = payments.filter(p => Number(p.student_id) === Number(studentId));

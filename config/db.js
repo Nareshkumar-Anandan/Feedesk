@@ -71,6 +71,18 @@ class FallbackStore {
               p.invoice_number = `HICAS-ADINV-OFF-${currentYear}-${String(invSeq).padStart(4, '0')}`;
               invSeq++;
             }
+            if (!p.payment_date && p.remarks && /^\d{4}-\d{2}-\d{2}/.test(p.remarks)) {
+              p.payment_date = p.remarks;
+              p.remarks = p.status || 'Offline payment recorded at Counter';
+              p.status = 'success';
+            }
+            if (!p.payment_date) {
+              const matchedInv = (this.data.invoices || []).find(inv => inv.invoice_number === p.invoice_number || inv.payment_id === p.id);
+              p.payment_date = matchedInv ? matchedInv.generated_at : (p.created_at || new Date().toISOString());
+            }
+            if (!p.status || p.status.includes('Offline payment')) {
+              p.status = 'success';
+            }
           });
         }
 
