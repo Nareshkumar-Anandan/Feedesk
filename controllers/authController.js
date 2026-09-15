@@ -23,26 +23,27 @@ exports.studentLogin = async (req, res) => {
       }
     }
 
+    const cleanIdentifier = identifier.trim();
     const [rows] = await query(
       'SELECT * FROM students WHERE roll_number = ? OR student_id = ? OR email = ?',
-      [identifier, identifier, identifier]
+      [cleanIdentifier, cleanIdentifier, cleanIdentifier]
     );
 
     if (!rows || rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Student account not found.' });
+      return res.status(401).json({ success: false, message: 'Student account not found.' });
     }
 
     const student = rows[0];
 
     // Password check (bcrypt or plain date-of-birth comparison fallback DDMMYYYY)
-    let isMatch = await bcrypt.compare(password, student.password);
+    let isMatch = await bcrypt.compare(password.trim(), student.password);
 
     // Fallback DOB verification if plain dob input DDMMYYYY vs YYYY-MM-DD
     if (!isMatch && student.dob) {
       const rawDob = student.dob.toString();
       const cleanDob = rawDob.replace(/-/g, ''); // YYYYMMDD
       const formattedDob = rawDob.split('-').reverse().join(''); // DDMMYYYY
-      if (password === cleanDob || password === formattedDob || password === rawDob) {
+      if (password.trim() === cleanDob || password.trim() === formattedDob || password.trim() === rawDob) {
         isMatch = true;
       }
     }
@@ -91,16 +92,21 @@ exports.adminLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Admin email and password are required.' });
     }
 
-    const [rows] = await query('SELECT * FROM admins WHERE email = ?', [email]);
+    const cleanEmail = email.trim();
+    const [rows] = await query('SELECT * FROM admins WHERE email = ?', [cleanEmail]);
 
     if (!rows || rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Admin account not found.' });
+      return res.status(401).json({ success: false, message: 'Admin account not found. Please check your email.' });
     }
 
     const admin = rows[0];
-    const isMatch = await bcrypt.compare(password, admin.password);
+    let isMatch = await bcrypt.compare(password.trim(), admin.password);
 
-    if (!isMatch && password !== 'Hicas@123') { // Fallback for initial demo setup
+    if (!isMatch && password.trim() === 'Hicas@123') { // Fallback for initial demo setup
+      isMatch = true;
+    }
+
+    if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 

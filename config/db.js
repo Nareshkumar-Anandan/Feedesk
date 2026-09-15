@@ -244,7 +244,7 @@ class FallbackStore {
         let invList = this.data.invoices.map(inv => {
           const st = this.data.students.find(s => s.id === inv.student_id) || {};
           const cr = this.data.courses.find(c => c.id === inv.course_id) || {};
-          const p = this.data.payments.find(pay => pay.id === inv.payment_id) || {};
+          const p = this.data.payments.find(pay => pay.id === inv.payment_id || pay.invoice_number === inv.invoice_number) || {};
           return {
             ...inv,
             student_name: st.name,
@@ -252,13 +252,19 @@ class FallbackStore {
             department: st.department,
             course_name: cr.course_name,
             transaction_id: p.transaction_id || '',
-            payment_date: p.payment_date || inv.generated_at,
-            payment_mode: p.payment_mode || 'online'
+            payment_date: p.payment_date || inv.generated_at || inv.created_at,
+            payment_mode: p.payment_mode || 'offline'
           };
         });
         if (params.length > 0 && sql.includes('student_id = ?')) {
           invList = invList.filter(i => i.student_id === Number(params[0]));
         }
+        invList.sort((a, b) => {
+          const dateA = new Date(a.payment_date || a.generated_at || 0).getTime();
+          const dateB = new Date(b.payment_date || b.generated_at || 0).getTime();
+          if (dateB !== dateA) return dateB - dateA;
+          return (b.id || 0) - (a.id || 0);
+        });
         return [invList];
       }
 

@@ -197,12 +197,12 @@ exports.getInvoicesList = async (req, res) => {
   try {
     const [rows] = await query(`
       SELECT i.*, s.name as student_name, s.roll_number, s.department, s.email, s.phone,
-             c.course_name, c.fee, p.payment_mode, p.payment_date, p.transaction_id, p.remarks
+             c.course_name, c.fee, p.payment_mode, COALESCE(p.payment_date, i.generated_at) as payment_date, p.transaction_id, p.remarks
       FROM invoices i
       LEFT JOIN students s ON i.student_id = s.id
       LEFT JOIN courses c ON i.course_id = c.id
       LEFT JOIN payments p ON i.payment_id = p.id
-      ORDER BY i.id DESC
+      ORDER BY COALESCE(p.payment_date, i.generated_at) DESC, i.id DESC
     `);
     res.json({ success: true, data: rows || [] });
   } catch (error) {
