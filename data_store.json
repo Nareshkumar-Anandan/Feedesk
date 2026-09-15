@@ -29,6 +29,7 @@
       "department": "B.Com - Computer Applications",
       "academic_year": "N/A",
       "course_name": "Python pro",
+      "course_name_2": "",
       "section": "N/A",
       "dob": "2003-01-09",
       "gender": "Male",
@@ -212,7 +213,7 @@
       "discount_amount": 1000,
       "fine_amount": null,
       "final_amount": null,
-      "payment_status": "pending",
+      "payment_status": "paid",
       "due_date": null,
       "created_at": "2026-09-03T07:00:05.729Z"
     },
@@ -269,13 +270,67 @@
       "created_at": "2026-09-03T09:36:56.703Z"
     }
   ],
-  "payments": [],
+  "payments": [
+    {
+      "id": 1,
+      "created_at": "2026-09-12T10:33:57.087Z",
+      "status": "Offline payment recorded at Counter",
+      "invoice_number": "HICAS-ADINV-OFF-2026-0001",
+      "student_id": 1,
+      "course_id": 1,
+      "amount": 4500,
+      "gst_amount": 0,
+      "total_amount": 4500,
+      "payment_mode": "cash",
+      "transaction_id": "HICAS-ADCOUNTER-000001",
+      "remarks": "2026-09-12T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "created_at": "2026-09-12T10:36:21.168Z",
+      "status": "Offline payment recorded at Counter",
+      "invoice_number": "HICAS-ADINV-OFF-2026-0002",
+      "student_id": 1,
+      "course_id": 1,
+      "amount": 500,
+      "gst_amount": 0,
+      "total_amount": 500,
+      "payment_mode": "cash",
+      "transaction_id": "HICAS-ADCOUNTER-000002",
+      "remarks": "2026-09-05 12:00:00"
+    }
+  ],
   "payment_history": [],
-  "invoices": [],
+  "invoices": [
+    {
+      "id": 1,
+      "generated_at": "2026-09-12T00:00:00.000Z",
+      "invoice_number": "HICAS-ADINV-OFF-2026-0001",
+      "student_id": 1,
+      "course_id": 1,
+      "payment_id": 1,
+      "amount": 4500,
+      "gst_amount": 0,
+      "total_amount": 4500,
+      "pdf_path": "/invoices/HICAS-ADINV-OFF-2026-0001.pdf"
+    },
+    {
+      "id": 2,
+      "generated_at": "2026-09-05 12:00:00",
+      "invoice_number": "HICAS-ADINV-OFF-2026-0002",
+      "student_id": 1,
+      "course_id": 1,
+      "payment_id": 2,
+      "amount": 500,
+      "gst_amount": 0,
+      "total_amount": 500,
+      "pdf_path": "/invoices/HICAS-ADINV-OFF-2026-0002.pdf"
+    }
+  ],
   "settings": [
     {
       "setting_key": "institution_name",
-      "setting_value": "Hindusthan Advanced Study"
+      "setting_value": "Hindusthan Institute of Advanced Study"
     },
     {
       "setting_key": "institution_address",

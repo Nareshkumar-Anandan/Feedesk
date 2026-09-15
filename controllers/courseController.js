@@ -193,7 +193,7 @@ exports.getAssignedCourses = async (req, res) => {
 
     let [rows] = await query(sql, [studentId]);
 
-    // Fallback: If student has no assigned course entry in student_courses, auto-assign matching or available course
+    // Fallback: If student has no assigned course entry in student_courses, auto-assign matching or available courses
     if (isStudent && rows.length === 0 && studentId) {
       const [stRows] = await query('SELECT * FROM students WHERE id = ?', [Number(studentId)]);
       const [allCourses] = await query('SELECT * FROM courses');
@@ -209,8 +209,22 @@ exports.getAssignedCourses = async (req, res) => {
             VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
             [Number(studentId), matchedCourse.id, matchedCourse.fee, matchedCourse.fee, matchedCourse.start_date || '2026-08-15']
           );
-          [rows] = await query(sql, [studentId]);
         }
+
+        const cleanCourse2 = (student.course_name_2 || '').trim();
+        if (cleanCourse2 && cleanCourse2.toLowerCase() !== 'none' && cleanCourse2.toLowerCase() !== (student.course_name || '').toLowerCase()) {
+          const matchedCourse2 = allCourses.find(c => (c.course_name || '').toLowerCase() === cleanCourse2.toLowerCase());
+          if (matchedCourse2) {
+            await query(
+              `INSERT INTO student_courses 
+              (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+              VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+              [Number(studentId), matchedCourse2.id, matchedCourse2.fee, matchedCourse2.fee, matchedCourse2.start_date || '2026-08-15']
+            );
+          }
+        }
+
+        [rows] = await query(sql, [studentId]);
       }
     }
 

@@ -50,7 +50,7 @@ function parseAndFormatDob(rawDob) {
 exports.getAllStudents = async (req, res) => {
   try {
     const { search, department, academic_year, section } = req.query;
-    let [students] = await query('SELECT id, student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, created_at FROM students ORDER BY id DESC');
+    let [students] = await query('SELECT id, student_id, roll_number, name, department, academic_year, course_name, course_name_2, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, created_at FROM students ORDER BY id DESC');
 
     if (search) {
       const q = search.toLowerCase();
@@ -85,7 +85,7 @@ exports.getAllStudents = async (req, res) => {
 exports.getStudentById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await query('SELECT id, student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, created_at FROM students WHERE id = ?', [id]);
+    const [rows] = await query('SELECT id, student_id, roll_number, name, department, academic_year, course_name, course_name_2, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, created_at FROM students WHERE id = ?', [id]);
 
     if (!rows || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Student not found.' });
@@ -101,7 +101,7 @@ exports.getStudentById = async (req, res) => {
 exports.createStudent = async (req, res) => {
   try {
     const {
-      student_id, roll_number, name, department, academic_year, course_name,
+      student_id, roll_number, name, department, academic_year, course_name, course_name_2,
       section, dob, gender, blood_group, father_name, mother_name,
       father_occupation, mother_occupation, phone, parent_phone, email, address
     } = req.body;
@@ -118,11 +118,11 @@ exports.createStudent = async (req, res) => {
 
     const [result] = await query(
       `INSERT INTO students 
-      (student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, password) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (student_id, roll_number, name, department, academic_year, course_name, course_name_2, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, password) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         genStudentId, roll_number, name, department || 'General', academic_year || '2025',
-        course_name || '', section || 'A', formattedDob, gender || 'Male', blood_group || 'O+',
+        course_name || '', course_name_2 || '', section || 'A', formattedDob, gender || 'Male', blood_group || 'O+',
         father_name || '', mother_name || '', father_occupation || '', mother_occupation || '',
         phone || '', parent_phone || '', email, address || '', photo_url, hashedPassword
       ]
@@ -130,7 +130,7 @@ exports.createStudent = async (req, res) => {
 
     const newStudentId = result.insertId || Date.now();
 
-    // Auto-assign course in student_courses table
+    // Auto-assign courses in student_courses table
     let [courses] = await query('SELECT * FROM courses');
     if (courses && courses.length > 0) {
       const matchedCourse = courses.find(c => (c.course_name || '').toLowerCase() === (course_name || '').toLowerCase()) || courses[0];
@@ -142,11 +142,25 @@ exports.createStudent = async (req, res) => {
           [newStudentId, matchedCourse.id, matchedCourse.fee, matchedCourse.fee, matchedCourse.start_date || '2026-08-15']
         );
       }
+
+      // Auto-assign second course if chosen and not 'None'
+      const cleanCourse2 = (course_name_2 || '').trim();
+      if (cleanCourse2 && cleanCourse2.toLowerCase() !== 'none' && cleanCourse2.toLowerCase() !== (course_name || '').toLowerCase()) {
+        const matchedCourse2 = courses.find(c => (c.course_name || '').toLowerCase() === cleanCourse2.toLowerCase());
+        if (matchedCourse2) {
+          await query(
+            `INSERT INTO student_courses 
+            (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+            VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+            [newStudentId, matchedCourse2.id, matchedCourse2.fee, matchedCourse2.fee, matchedCourse2.start_date || '2026-08-15']
+          );
+        }
+      }
     }
 
     res.status(201).json({
       success: true,
-      message: 'Student registered and course assigned successfully!',
+      message: 'Student registered and courses assigned successfully!',
       studentId: newStudentId
     });
   } catch (error) {
@@ -160,7 +174,7 @@ exports.updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      roll_number, name, department, course_name, dob,
+      roll_number, name, department, course_name, course_name_2, dob,
       father_name, father_occupation, mother_name, mother_occupation,
       phone, parent_phone, email, address
     } = req.body;
@@ -178,22 +192,140 @@ exports.updateStudent = async (req, res) => {
     } else {
       await query(
         `UPDATE students 
-         SET roll_number = ?, name = ?, department = ?, course_name = ?, dob = ?,
+         SET roll_number = ?, name = ?, department = ?, course_name = ?, course_name_2 = ?, dob = ?,
              father_name = ?, father_occupation = ?, mother_name = ?, mother_occupation = ?,
              phone = ?, parent_phone = ?, email = ?, address = ?
          WHERE id = ?`,
         [
-          roll_number, name, department || '', course_name || '', dob,
+          roll_number, name, department || '', course_name || '', course_name_2 || '', dob,
           father_name || '', father_occupation || '', mother_name || '', mother_occupation || '',
           phone || '', parent_phone || '', email || '', address || '', id
         ]
       );
+
+      // Sync student_courses
+      let [courses] = await query('SELECT * FROM courses');
+      if (courses && courses.length > 0) {
+        const studentDbId = Number(id);
+        const [existingScs] = await query('SELECT * FROM student_courses WHERE student_id = ?', [studentDbId]);
+
+        // 1. Ensure course 1 is assigned
+        const matchedCourse1 = courses.find(c => (c.course_name || '').toLowerCase() === (course_name || '').toLowerCase()) || courses[0];
+        if (matchedCourse1) {
+          const hasSc1 = existingScs.find(sc => sc.course_id === matchedCourse1.id);
+          if (!hasSc1) {
+            if (existingScs.length > 0 && existingScs[0].payment_status !== 'paid') {
+              await query('UPDATE student_courses SET course_id = ?, fee_amount = ?, final_amount = ? WHERE id = ?', [
+                matchedCourse1.id, matchedCourse1.fee, matchedCourse1.fee, existingScs[0].id
+              ]);
+            } else {
+              await query(
+                `INSERT INTO student_courses 
+                (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+                VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+                [studentDbId, matchedCourse1.id, matchedCourse1.fee, matchedCourse1.fee, matchedCourse1.start_date || '2026-08-15']
+              );
+            }
+          }
+        }
+
+        // 2. Ensure course 2 is assigned if specified
+        const cleanCourse2 = (course_name_2 || '').trim();
+        if (cleanCourse2 && cleanCourse2.toLowerCase() !== 'none' && cleanCourse2.toLowerCase() !== (course_name || '').toLowerCase()) {
+          const matchedCourse2 = courses.find(c => (c.course_name || '').toLowerCase() === cleanCourse2.toLowerCase());
+          if (matchedCourse2) {
+            const hasSc2 = existingScs.find(sc => sc.course_id === matchedCourse2.id);
+            if (!hasSc2) {
+              await query(
+                `INSERT INTO student_courses 
+                (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+                VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+                [studentDbId, matchedCourse2.id, matchedCourse2.fee, matchedCourse2.fee, matchedCourse2.start_date || '2026-08-15']
+              );
+            }
+          }
+        }
+      }
     }
 
     res.json({ success: true, message: 'Student profile updated successfully!' });
   } catch (error) {
     console.error('Update Student Error:', error);
     res.status(500).json({ success: false, message: 'Failed to update student profile.' });
+  }
+};
+
+// Bulk Assign / Change Courses for Selected Students (Admin)
+exports.bulkAssignCourses = async (req, res) => {
+  try {
+    const { ids, course_name, course_name_2 } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please select at least one student.' });
+    }
+    if (!course_name) {
+      return res.status(400).json({ success: false, message: 'Please select a primary course.' });
+    }
+
+    let [courses] = await query('SELECT * FROM courses');
+    const matchedCourse1 = (courses || []).find(c => (c.course_name || '').toLowerCase() === (course_name || '').toLowerCase());
+    const cleanCourse2 = (course_name_2 || '').trim();
+    const matchedCourse2 = (cleanCourse2 && cleanCourse2.toLowerCase() !== 'none' && cleanCourse2.toLowerCase() !== (course_name || '').toLowerCase())
+      ? (courses || []).find(c => (c.course_name || '').toLowerCase() === cleanCourse2.toLowerCase())
+      : null;
+
+    for (const id of ids) {
+      const studentDbId = Number(id);
+      // 1. Update students table course fields only
+      await query(
+        'UPDATE students SET course_name = ?, course_name_2 = ? WHERE id = ?',
+        [course_name, cleanCourse2 && cleanCourse2.toLowerCase() !== 'none' ? cleanCourse2 : '', studentDbId]
+      );
+
+      // 2. Synchronize student_courses
+      if (courses && courses.length > 0) {
+        const [existingScs] = await query('SELECT * FROM student_courses WHERE student_id = ?', [studentDbId]);
+
+        // Course 1
+        if (matchedCourse1) {
+          const has1 = existingScs.find(sc => sc.course_id === matchedCourse1.id);
+          if (!has1) {
+            if (existingScs.length > 0 && existingScs[0].payment_status !== 'paid') {
+              await query('UPDATE student_courses SET course_id = ?, fee_amount = ?, final_amount = ? WHERE id = ?', [
+                matchedCourse1.id, matchedCourse1.fee, matchedCourse1.fee, existingScs[0].id
+              ]);
+            } else {
+              await query(
+                `INSERT INTO student_courses 
+                (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+                VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+                [studentDbId, matchedCourse1.id, matchedCourse1.fee, matchedCourse1.fee, matchedCourse1.start_date || '2026-08-15']
+              );
+            }
+          }
+        }
+
+        // Course 2
+        if (matchedCourse2) {
+          const has2 = existingScs.find(sc => sc.course_id === matchedCourse2.id);
+          if (!has2) {
+            await query(
+              `INSERT INTO student_courses 
+              (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+              VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+              [studentDbId, matchedCourse2.id, matchedCourse2.fee, matchedCourse2.fee, matchedCourse2.start_date || '2026-08-15']
+            );
+          }
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Course(s) assigned successfully to ${ids.length} student(s)!`
+    });
+  } catch (error) {
+    console.error('Bulk Assign Courses Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to assign courses to selected students.' });
   }
 };
 
@@ -205,6 +337,23 @@ exports.deleteStudent = async (req, res) => {
     res.json({ success: true, message: 'Student record deleted successfully.' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to delete student.' });
+  }
+};
+
+// Bulk Delete students (Admin)
+exports.bulkDeleteStudents = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No student IDs provided.' });
+    }
+    for (const id of ids) {
+      await query('DELETE FROM students WHERE id = ?', [id]);
+    }
+    res.json({ success: true, message: `${ids.length} student records deleted successfully.` });
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete selected students.' });
   }
 };
 
@@ -230,7 +379,7 @@ exports.resetPassword = async (req, res) => {
 // Export Students to Excel
 exports.exportStudentsExcel = async (req, res) => {
   try {
-    const [students] = await query('SELECT student_id, roll_number, name, department, academic_year, course_name, section, dob, phone, email FROM students');
+    const [students] = await query('SELECT student_id, roll_number, name, department, academic_year, course_name, course_name_2, section, dob, phone, email FROM students');
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Students List');
@@ -241,14 +390,18 @@ exports.exportStudentsExcel = async (req, res) => {
       { header: 'Name', key: 'name', width: 25 },
       { header: 'Department', key: 'department', width: 20 },
       { header: 'Academic Year', key: 'academic_year', width: 15 },
-      { header: 'Course', key: 'course_name', width: 20 },
+      { header: 'Primary Course', key: 'course_name', width: 20 },
+      { header: 'Second Course (Optional)', key: 'course_name_2', width: 22 },
       { header: 'Section', key: 'section', width: 10 },
       { header: 'DOB', key: 'dob', width: 12 },
       { header: 'Phone', key: 'phone', width: 15 },
       { header: 'Email', key: 'email', width: 25 }
     ];
 
-    students.forEach(student => worksheet.addRow(student));
+    students.forEach(student => worksheet.addRow({
+      ...student,
+      course_name_2: student.course_name_2 || '-'
+    }));
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="students_list.xlsx"');
@@ -290,6 +443,7 @@ exports.bulkImportStudents = async (req, res) => {
       const studentId = `STU${Date.now()}_${Math.floor(100 + Math.random() * 900)}`;
       const department = st.department || 'B.Com - Computer Applications';
       const courseName = st.course_name || (defaultCourse ? defaultCourse.course_name : 'Skill Enhancement');
+      const courseName2 = (st.course_name_2 || '').trim();
       const email = st.email || `${rollNumber.toLowerCase()}@hindusthan.net`;
       const phone = st.phone || '';
       const gender = st.gender || 'Male';
@@ -305,13 +459,14 @@ exports.bulkImportStudents = async (req, res) => {
 
       const [insertRes] = await query(
         `INSERT INTO students 
-        (student_id, roll_number, name, department, academic_year, course_name, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, password) 
+        (student_id, roll_number, name, department, academic_year, course_name, course_name_2, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, password) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)
         ON DUPLICATE KEY UPDATE 
           name = VALUES(name),
           department = VALUES(department),
           academic_year = VALUES(academic_year),
           course_name = VALUES(course_name),
+          course_name_2 = VALUES(course_name_2),
           section = VALUES(section),
           dob = VALUES(dob),
           gender = VALUES(gender),
@@ -323,7 +478,7 @@ exports.bulkImportStudents = async (req, res) => {
           phone = VALUES(phone),
           parent_phone = VALUES(parent_phone),
           address = VALUES(address)`,
-        [studentId, rollNumber, name, department, academicYear, courseName, section, formattedDob, gender, bloodGroup, fatherName, motherName, fatherOccupation, motherOccupation, phone, parentPhone, email, address, hashedPassword]
+        [studentId, rollNumber, name, department, academicYear, courseName, courseName2, section, formattedDob, gender, bloodGroup, fatherName, motherName, fatherOccupation, motherOccupation, phone, parentPhone, email, address, hashedPassword]
       );
 
       let studentDbId = insertRes.insertId || insertRes.id;
@@ -332,21 +487,42 @@ exports.bulkImportStudents = async (req, res) => {
         if (found && found.length > 0) studentDbId = found[0].id;
       }
 
-      if (defaultCourse && studentDbId) {
-        const assignedCourse = (courses || []).find(c => (c.course_name || '').toLowerCase() === courseName.toLowerCase()) || defaultCourse;
-        const [existingSc] = await query('SELECT id FROM student_courses WHERE student_id = ?', [studentDbId]);
-        if (!existingSc || existingSc.length === 0) {
-          await query(
-            `INSERT INTO student_courses 
-            (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
-            VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
-            [studentDbId, assignedCourse.id, assignedCourse.fee, assignedCourse.fee, assignedCourse.start_date || '2026-08-15']
-          );
-        } else {
-          await query(
-            `UPDATE student_courses SET course_id = ?, fee_amount = ?, final_amount = ? WHERE id = ?`,
-            [assignedCourse.id, assignedCourse.fee, assignedCourse.fee, existingSc[0].id]
-          );
+      if (courses && courses.length > 0 && studentDbId) {
+        const assignedCourse1 = (courses || []).find(c => (c.course_name || '').toLowerCase() === courseName.toLowerCase()) || defaultCourse;
+        const [existingScs] = await query('SELECT id, course_id FROM student_courses WHERE student_id = ?', [studentDbId]);
+        
+        if (assignedCourse1) {
+          const has1 = existingScs.find(sc => sc.course_id === assignedCourse1.id);
+          if (!has1) {
+            if (existingScs.length === 0) {
+              await query(
+                `INSERT INTO student_courses 
+                (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+                VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+                [studentDbId, assignedCourse1.id, assignedCourse1.fee, assignedCourse1.fee, assignedCourse1.start_date || '2026-08-15']
+              );
+            } else {
+              await query(
+                `UPDATE student_courses SET course_id = ?, fee_amount = ?, final_amount = ? WHERE id = ?`,
+                [assignedCourse1.id, assignedCourse1.fee, assignedCourse1.fee, existingScs[0].id]
+              );
+            }
+          }
+        }
+
+        if (courseName2 && courseName2.toLowerCase() !== 'none' && courseName2.toLowerCase() !== courseName.toLowerCase()) {
+          const assignedCourse2 = (courses || []).find(c => (c.course_name || '').toLowerCase() === courseName2.toLowerCase());
+          if (assignedCourse2) {
+            const has2 = existingScs.find(sc => sc.course_id === assignedCourse2.id);
+            if (!has2) {
+              await query(
+                `INSERT INTO student_courses 
+                (student_id, course_id, fee_amount, discount_amount, fine_amount, final_amount, payment_status, due_date)
+                VALUES (?, ?, ?, 0.00, 0.00, ?, 'pending', ?)`,
+                [studentDbId, assignedCourse2.id, assignedCourse2.fee, assignedCourse2.fee, assignedCourse2.start_date || '2026-08-15']
+              );
+            }
+          }
         }
       }
 

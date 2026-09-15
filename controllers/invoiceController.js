@@ -42,13 +42,10 @@ exports.generateInvoicePdfInternal = async (data) => {
       doc.fillColor('#FFFFFF')
          .fontSize(18)
          .font('Helvetica-Bold')
-         .text('HINDUSTHAN ADVANCED STUDY', 40, 22);
-      doc.fontSize(9.5)
-         .font('Helvetica')
-         .text('Avinashi Road, Nava India, Udayampalayam, Coimbatore, Tamil Nadu 641028', 40, 48);
+         .text('HINDUSTHAN INSTITUTE OF ADVANCED STUDY', 40, 25);
       doc.fontSize(12)
          .font('Helvetica-Bold')
-         .text('TAX INVOICE & RECEIPT', 40, 66);
+         .text('TAX INVOICE & RECEIPT', 40, 55);
 
       // Reset fill color
       doc.fillColor('#333333');
@@ -120,7 +117,7 @@ exports.generateInvoicePdfInternal = async (data) => {
       // Signature Placeholder
       doc.fillColor('#0F4C81').fontSize(10).font('Helvetica-Bold');
       doc.text('Authorized Finance Controller', 380, summaryTop + 130, { align: 'right' });
-      doc.fontSize(8).fillColor('#64748B').text('Hindusthan Advanced Study', 380, summaryTop + 145, { align: 'right' });
+      doc.fontSize(8).fillColor('#64748B').text('Hindusthan Institute of Advanced Study', 380, summaryTop + 145, { align: 'right' });
 
       doc.end();
 

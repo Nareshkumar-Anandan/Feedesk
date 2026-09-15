@@ -20,7 +20,7 @@ class FallbackStore {
       payment_history: [],
       invoices: [],
       settings: [
-        { setting_key: 'institution_name', setting_value: 'Hindusthan Advanced Study' },
+        { setting_key: 'institution_name', setting_value: 'Hindusthan Institute of Advanced Study' },
         { setting_key: 'institution_address', setting_value: 'Avinashi Rd, behind Nava India, Udayampalayam, Tamil Nadu 641028' },
         { setting_key: 'institution_phone', setting_value: '+91 98431 33333' },
         { setting_key: 'institution_email', setting_value: 'info@hindusthan.net' },
@@ -178,7 +178,10 @@ class FallbackStore {
       }
 
       if (sql.includes('FROM students')) {
-        let results = [...this.data.students];
+        let results = this.data.students.map(st => ({
+          ...st,
+          course_name_2: st.course_name_2 || ''
+        }));
         if (sql.includes('WHERE roll_number = ?') || sql.includes('WHERE student_id = ?')) {
           const val = (params[0] || '').toLowerCase();
           results = results.filter(st => st.roll_number.toLowerCase() === val || st.student_id.toLowerCase() === val);
@@ -306,28 +309,59 @@ class FallbackStore {
     if (s.startsWith('INSERT')) {
       if (sql.includes('INTO students')) {
         const newId = this.data.students.length ? Math.max(...this.data.students.map(s => s.id)) + 1 : 1;
-        const newStudent = {
-          id: newId,
-          student_id: params[0] || `STU${Date.now()}`,
-          roll_number: params[1],
-          name: params[2],
-          department: params[3],
-          academic_year: params[4],
-          course_name: params[5],
-          section: params[6],
-          dob: params[7],
-          gender: params[8] || 'Male',
-          blood_group: params[9] || 'O+',
-          father_name: params[10] || '',
-          mother_name: params[11] || '',
-          phone: params[12] || '',
-          parent_phone: params[13] || '',
-          email: params[14],
-          address: params[15] || '',
-          photo_url: params[16] || '',
-          password: params[17],
-          created_at: new Date().toISOString()
-        };
+        const hasCourse2 = sql.includes('course_name_2');
+        let newStudent;
+        if (hasCourse2) {
+          newStudent = {
+            id: newId,
+            student_id: params[0] || `STU${Date.now()}`,
+            roll_number: params[1],
+            name: params[2],
+            department: params[3],
+            academic_year: params[4],
+            course_name: params[5],
+            course_name_2: params[6] || '',
+            section: params[7],
+            dob: params[8],
+            gender: params[9] || 'Male',
+            blood_group: params[10] || 'O+',
+            father_name: params[11] || '',
+            mother_name: params[12] || '',
+            father_occupation: params[13] || '',
+            mother_occupation: params[14] || '',
+            phone: params[15] || '',
+            parent_phone: params[16] || '',
+            email: params[17],
+            address: params[18] || '',
+            photo_url: params[19] || '',
+            password: params[20],
+            created_at: new Date().toISOString()
+          };
+        } else {
+          newStudent = {
+            id: newId,
+            student_id: params[0] || `STU${Date.now()}`,
+            roll_number: params[1],
+            name: params[2],
+            department: params[3],
+            academic_year: params[4],
+            course_name: params[5],
+            course_name_2: '',
+            section: params[6],
+            dob: params[7],
+            gender: params[8] || 'Male',
+            blood_group: params[9] || 'O+',
+            father_name: params[10] || '',
+            mother_name: params[11] || '',
+            phone: params[12] || '',
+            parent_phone: params[13] || '',
+            email: params[14],
+            address: params[15] || '',
+            photo_url: params[16] || '',
+            password: params[17],
+            created_at: new Date().toISOString()
+          };
+        }
         this.data.students.push(newStudent);
         this.save();
         return [{ insertId: newId, affectedRows: 1 }];
@@ -392,28 +426,27 @@ class FallbackStore {
 
       if (sql.includes('INTO payments')) {
         const newId = this.data.payments.length ? Math.max(...this.data.payments.map(p => p.id)) + 1 : 1;
-        const newPayment = {
+        const colMatch = sql.match(/INTO\s+payments\s*\(([^)]+)\)/i);
+        let pObj = {
           id: newId,
-          invoice_number: params[0],
-          student_id: Number(params[1]),
-          course_id: Number(params[2]),
-          amount: Number(params[3]),
-          gst_amount: Number(params[4] || 0),
-          total_amount: Number(params[5]),
-          payment_mode: params[6],
-          transaction_id: params[7] || '',
-          razorpay_order_id: params[8] || '',
-          razorpay_payment_id: params[9] || '',
+          created_at: new Date().toISOString(),
           payment_date: new Date().toISOString(),
-          status: params[10] || 'success',
-          remarks: params[11] || '',
-          created_at: new Date().toISOString()
+          status: 'success'
         };
-        this.data.payments.push(newPayment);
+        if (colMatch) {
+          const cols = colMatch[1].split(',').map(c => c.trim());
+          cols.forEach((col, idx) => {
+            let val = params[idx];
+            if (col === 'student_id' || col === 'course_id') val = Number(val);
+            if (col === 'amount' || col === 'gst_amount' || col === 'total_amount') val = Number(val || 0);
+            pObj[col] = val;
+          });
+        }
+        this.data.payments.push(pObj);
 
         // Update student_courses status for student
         this.data.student_courses.forEach(item => {
-          if (item.student_id === newPayment.student_id && newPayment.status === 'success') {
+          if (item.student_id === pObj.student_id && pObj.status === 'success') {
             item.payment_status = 'paid';
           }
         });
@@ -423,19 +456,21 @@ class FallbackStore {
 
       if (sql.includes('INTO invoices')) {
         const newId = this.data.invoices.length ? Math.max(...this.data.invoices.map(i => i.id)) + 1 : 1;
-        const newInv = {
+        const colMatch = sql.match(/INTO\s+invoices\s*\(([^)]+)\)/i);
+        let invObj = {
           id: newId,
-          invoice_number: params[0],
-          student_id: Number(params[1]),
-          course_id: Number(params[2]),
-          payment_id: Number(params[3]),
-          amount: Number(params[4]),
-          gst_amount: Number(params[5] || 0),
-          total_amount: Number(params[6]),
-          pdf_path: params[7] || '',
           generated_at: new Date().toISOString()
         };
-        this.data.invoices.push(newInv);
+        if (colMatch) {
+          const cols = colMatch[1].split(',').map(c => c.trim());
+          cols.forEach((col, idx) => {
+            let val = params[idx];
+            if (col === 'student_id' || col === 'course_id' || col === 'payment_id') val = Number(val);
+            if (col === 'amount' || col === 'gst_amount' || col === 'total_amount') val = Number(val || 0);
+            invObj[col] = val;
+          });
+        }
+        this.data.invoices.push(invObj);
         this.save();
         return [{ insertId: newId, affectedRows: 1 }];
       }
@@ -464,7 +499,27 @@ class FallbackStore {
         const id = Number(params[params.length - 1]);
         const st = this.data.students.find(item => item.id === id);
         if (st) {
-          if (params.length >= 13) {
+          if (sql.includes('SET course_name = ?, course_name_2 = ?')) {
+            st.course_name = params[0];
+            st.course_name_2 = params[1] || '';
+            this.save();
+            return [{ affectedRows: 1 }];
+          } else if (sql.includes('course_name_2 = ?')) {
+            st.roll_number = params[0];
+            st.name = params[1];
+            st.department = params[2];
+            st.course_name = params[3];
+            st.course_name_2 = params[4] || '';
+            st.dob = params[5];
+            st.father_name = params[6];
+            st.father_occupation = params[7];
+            st.mother_name = params[8];
+            st.mother_occupation = params[9];
+            st.phone = params[10];
+            st.parent_phone = params[11];
+            st.email = params[12];
+            st.address = params[13];
+          } else if (params.length >= 13) {
             st.roll_number = params[0];
             st.name = params[1];
             st.department = params[2];
@@ -710,6 +765,7 @@ async function autoInitMySQL(host, user, password, port, dbName) {
         department VARCHAR(100) NOT NULL,
         academic_year VARCHAR(20) NOT NULL,
         course_name VARCHAR(100) NOT NULL,
+        course_name_2 VARCHAR(100) DEFAULT '',
         section VARCHAR(10) NOT NULL,
         dob DATE NOT NULL,
         gender ENUM('Male', 'Female', 'Other') DEFAULT 'Male',
@@ -728,6 +784,12 @@ async function autoInitMySQL(host, user, password, port, dbName) {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+
+    try {
+      await conn.query(`ALTER TABLE students ADD COLUMN course_name_2 VARCHAR(100) DEFAULT '' AFTER course_name`);
+    } catch (e) {
+      // Column may already exist
+    }
 
     await conn.query(`
       CREATE TABLE IF NOT EXISTS courses (
@@ -861,7 +923,7 @@ async function autoInitMySQL(host, user, password, port, dbName) {
 
     // Ensure default settings exist
     const defaultSettings = [
-      ['institution_name', 'Hindusthan Advanced Study'],
+      ['institution_name', 'Hindusthan Institute of Advanced Study'],
       ['institution_address', 'Avinashi Rd, behind Nava India, Udayampalayam, Tamil Nadu 641028'],
       ['institution_phone', '+91 98431 33333'],
       ['institution_email', 'info@hindusthan.net'],

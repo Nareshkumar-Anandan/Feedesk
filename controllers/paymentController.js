@@ -217,7 +217,7 @@ async function getNextCounterTransactionId() {
 // 3. Record Offline Payment (Admin / Counter)
 exports.recordOfflinePayment = async (req, res) => {
   try {
-    const { student_id, course_id, amount, payment_mode, transaction_id, remarks } = req.body;
+    const { student_id, course_id, amount, payment_mode, transaction_id, remarks, invoice_date, payment_date } = req.body;
 
     if (!student_id || !course_id || !amount || !payment_mode) {
       return res.status(400).json({ success: false, message: 'Student, Course, Amount, and Payment Mode (Cash/UPI/Cheque/Bank Transfer) are required.' });
@@ -234,11 +234,45 @@ exports.recordOfflinePayment = async (req, res) => {
       txnId = await getNextCounterTransactionId();
     }
 
+    const customDate = invoice_date || payment_date;
+    const formatToMySQLDateTime = (dInput) => {
+      if (!dInput) {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      }
+      if (typeof dInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dInput.trim())) {
+        return `${dInput.trim()} 12:00:00`;
+      }
+      const d = new Date(dInput);
+      if (isNaN(d.getTime())) {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      }
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
+    const formatToDisplayDate = (dInput) => {
+      if (!dInput) return new Date().toLocaleDateString('en-GB');
+      if (typeof dInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dInput.trim())) {
+        const [y, m, d] = dInput.trim().split('-');
+        return `${d}/${m}/${y}`;
+      }
+      const d = new Date(dInput);
+      if (isNaN(d.getTime())) return new Date().toLocaleDateString('en-GB');
+      return d.toLocaleDateString('en-GB');
+    };
+
+    const effectivePaymentDate = formatToMySQLDateTime(customDate);
+    const formattedDateForPdf = formatToDisplayDate(customDate);
+
     const [payResult] = await query(
       `INSERT INTO payments 
-      (invoice_number, student_id, course_id, amount, gst_amount, total_amount, payment_mode, transaction_id, status, remarks)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'success', ?)`,
-      [invoiceNumber, Number(student_id), Number(course_id), baseAmount, gstAmount, totalAmount, payment_mode, txnId, remarks || 'Offline payment recorded at Counter']
+      (invoice_number, student_id, course_id, amount, gst_amount, total_amount, payment_mode, transaction_id, status, remarks, payment_date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'success', ?, ?)`,
+      [invoiceNumber, Number(student_id), Number(course_id), baseAmount, gstAmount, totalAmount, payment_mode, txnId, remarks || 'Offline payment recorded at Counter', effectivePaymentDate]
     );
 
     const paymentId = payResult.insertId;
@@ -257,14 +291,14 @@ exports.recordOfflinePayment = async (req, res) => {
       gst_amount: gstAmount,
       total_amount: totalAmount,
       transaction_id: txnId,
-      payment_date: new Date().toLocaleDateString('en-IN'),
+      payment_date: formattedDateForPdf,
       payment_mode
     });
 
     await query(
-      `INSERT INTO invoices (invoice_number, student_id, course_id, payment_id, amount, gst_amount, total_amount, pdf_path)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [invoiceNumber, Number(student_id), Number(course_id), paymentId, baseAmount, gstAmount, totalAmount, invoicePdfPath]
+      `INSERT INTO invoices (invoice_number, student_id, course_id, payment_id, amount, gst_amount, total_amount, pdf_path, generated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [invoiceNumber, Number(student_id), Number(course_id), paymentId, baseAmount, gstAmount, totalAmount, invoicePdfPath, effectivePaymentDate]
     );
 
     res.json({
@@ -281,7 +315,7 @@ exports.recordOfflinePayment = async (req, res) => {
     });
   } catch (error) {
     console.error('Offline Payment Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to record offline payment.' });
+    res.status(500).json({ success: false, message: error.message || 'Failed to record offline payment.' });
   }
 };
 
