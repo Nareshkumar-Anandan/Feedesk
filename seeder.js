@@ -5,11 +5,6 @@ async function seedDatabase() {
   console.log('🌱 Starting database seeding process...');
   const db = await getDbConnection();
 
-  if (db.isFallback) {
-    console.log('✅ Fallback database store initialized and pre-seeded automatically.');
-    process.exit(0);
-  }
-
   try {
     const adminPasswordHash = await bcrypt.hash('Hicas@123', 10);
     const defaultStudentPasswordHash = await bcrypt.hash('15082005', 10);

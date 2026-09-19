@@ -81,24 +81,20 @@ exports.clearDatabase = async (req, res) => {
     const { getDbConnection } = require('../config/db');
     const db = await getDbConnection();
 
-    if (db.isFallback) {
-      await db.clearAllData(type);
+    if (type === 'transactions_only') {
+      await query('TRUNCATE TABLE payments');
+      await query('TRUNCATE TABLE payment_history');
+      await query('TRUNCATE TABLE invoices');
+      await query("UPDATE student_courses SET payment_status = 'pending'");
     } else {
-      if (type === 'transactions_only') {
-        await query('TRUNCATE TABLE payments');
-        await query('TRUNCATE TABLE payment_history');
-        await query('TRUNCATE TABLE invoices');
-        await query("UPDATE student_courses SET payment_status = 'pending'");
-      } else {
-        await query('SET FOREIGN_KEY_CHECKS = 0');
-        await query('TRUNCATE TABLE payments');
-        await query('TRUNCATE TABLE payment_history');
-        await query('TRUNCATE TABLE invoices');
-        await query('TRUNCATE TABLE student_courses');
-        await query('TRUNCATE TABLE students');
-        await query('TRUNCATE TABLE courses');
-        await query('SET FOREIGN_KEY_CHECKS = 1');
-      }
+      await query('SET FOREIGN_KEY_CHECKS = 0');
+      await query('TRUNCATE TABLE payments');
+      await query('TRUNCATE TABLE payment_history');
+      await query('TRUNCATE TABLE invoices');
+      await query('TRUNCATE TABLE student_courses');
+      await query('TRUNCATE TABLE students');
+      await query('TRUNCATE TABLE courses');
+      await query('SET FOREIGN_KEY_CHECKS = 1');
     }
 
     res.json({
