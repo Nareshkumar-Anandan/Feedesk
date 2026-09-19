@@ -795,7 +795,7 @@ async function autoInitMySQL(host, user, password, port, dbName) {
         phone VARCHAR(20) DEFAULT '',
         parent_phone VARCHAR(20) DEFAULT '',
         email VARCHAR(150) NOT NULL UNIQUE,
-        address TEXT DEFAULT '',
+        address TEXT NULL,
         photo_url VARCHAR(255) DEFAULT '',
         password VARCHAR(255) NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -873,7 +873,7 @@ async function autoInitMySQL(host, user, password, port, dbName) {
         razorpay_payment_id VARCHAR(100) DEFAULT '',
         payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         status ENUM('success', 'pending', 'failed', 'approved') DEFAULT 'success',
-        remarks TEXT DEFAULT '',
+        remarks TEXT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
         FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
@@ -885,7 +885,7 @@ async function autoInitMySQL(host, user, password, port, dbName) {
         id INT AUTO_INCREMENT PRIMARY KEY,
         payment_id INT NOT NULL,
         status VARCHAR(50) NOT NULL,
-        notes TEXT DEFAULT '',
+        notes TEXT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
