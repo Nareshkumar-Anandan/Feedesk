@@ -2,26 +2,71 @@ const fs = require('fs');
 const path = require('path');
 const { getDbConnection, query } = require('./config/db');
 
-// Helper to format date to YYYY-MM-DD
+// Smart helper to normalize any date into valid MySQL YYYY-MM-DD
 function toDateOnly(d) {
-  if (!d) return null;
-  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d)) {
-    return d.split('T')[0].split(' ')[0];
+  if (!d) return '2005-01-01';
+  const str = String(d).trim().split('T')[0].split(' ')[0];
+
+  // 1. Format: YYYY-MM-DD or YYYY-DD-MM
+  if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(str)) {
+    const parts = str.split(/[-/]/);
+    let y = parseInt(parts[0], 10);
+    let m = parseInt(parts[1], 10);
+    let day = parseInt(parts[2], 10);
+
+    // If month > 12, it is in YYYY-DD-MM format -> swap month and day
+    if (m > 12 && day <= 12) {
+      const temp = m;
+      m = day;
+      day = temp;
+    } else if (m > 12) {
+      m = 1;
+    }
+    if (day > 31 || day < 1) day = 1;
+    if (m < 1 || m > 12) m = 1;
+
+    return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
+
+  // 2. Format: DD-MM-YYYY or DD/MM/YYYY
+  if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(str)) {
+    const parts = str.split(/[-/]/);
+    let day = parseInt(parts[0], 10);
+    let m = parseInt(parts[1], 10);
+    let y = parseInt(parts[2], 10);
+
+    if (m > 12 && day <= 12) {
+      const temp = m;
+      m = day;
+      day = temp;
+    } else if (m > 12) {
+      m = 1;
+    }
+    if (day > 31 || day < 1) day = 1;
+    if (m < 1 || m > 12) m = 1;
+
+    return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
   const date = new Date(d);
-  if (isNaN(date.getTime())) return null;
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
+  if (!isNaN(date.getTime())) {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  return '2005-01-01';
 }
 
-// Helper to format datetime to YYYY-MM-DD HH:mm:ss
+// Smart helper to format datetime into valid MySQL YYYY-MM-DD HH:mm:ss
 function toDateTime(d) {
   if (!d) return null;
   const date = new Date(d);
-  if (isNaN(date.getTime())) return null;
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  if (!isNaN(date.getTime())) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+  return `${toDateOnly(d)} 00:00:00`;
 }
 
 async function migrate() {
