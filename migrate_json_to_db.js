@@ -69,6 +69,17 @@ function toDateTime(d) {
   return `${toDateOnly(d)} 00:00:00`;
 }
 
+// Normalize payment / transaction status strings
+function normalizeStatus(st) {
+  if (!st) return 'success';
+  const s = String(st).toLowerCase().trim();
+  if (s.includes('succ') || s.includes('paid') || s.includes('offline') || s.includes('comp')) return 'success';
+  if (s.includes('appr')) return 'approved';
+  if (s.includes('fail') || s.includes('declin') || s.includes('err')) return 'failed';
+  if (s.includes('pend')) return 'pending';
+  return 'success';
+}
+
 async function migrate() {
   console.log('\n=============================================================');
   console.log('📦 FeeDesk JSON to MySQL Data Migration Tool (migrate_json_to_db.js)');
@@ -99,6 +110,12 @@ async function migrate() {
     // Disable Foreign Key checks for batch import
     await query('SET FOREIGN_KEY_CHECKS = 0');
     console.log('🔓 Temporarily disabled FOREIGN_KEY_CHECKS for seamless migration.\n');
+
+    // Widen any rigid ENUM columns so legacy descriptions don't truncate
+    try {
+      await query("ALTER TABLE payments MODIFY COLUMN status VARCHAR(50) DEFAULT 'success'");
+      await query("ALTER TABLE student_courses MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'pending'");
+    } catch (_) {}
 
     // 1. Migrate Admins
     if (Array.isArray(rawData.admins) && rawData.admins.length > 0) {
@@ -225,7 +242,7 @@ async function migrate() {
             Number(sc.discount_amount || 0),
             Number(sc.fine_amount || 0),
             Number(sc.final_amount || sc.fee_amount || 0),
-            sc.payment_status || 'pending',
+            normalizeStatus(sc.payment_status),
             toDateOnly(sc.due_date),
             toDateTime(sc.created_at)
           ]
@@ -263,7 +280,7 @@ async function migrate() {
             p.razorpay_order_id || '',
             p.razorpay_payment_id || '',
             toDateTime(p.payment_date || p.created_at),
-            p.status || 'success',
+            normalizeStatus(p.status),
             p.remarks || '',
             toDateTime(p.created_at)
           ]
@@ -280,7 +297,7 @@ async function migrate() {
           `INSERT INTO payment_history (id, payment_id, status, notes, created_at)
            VALUES (?, ?, ?, ?, COALESCE(?, NOW()))
            ON DUPLICATE KEY UPDATE status = VALUES(status)`,
-          [ph.id || null, ph.payment_id, ph.status || 'success', ph.notes || '', toDateTime(ph.created_at)]
+          [ph.id || null, ph.payment_id, normalizeStatus(ph.status), ph.notes || '', toDateTime(ph.created_at)]
         );
       }
       console.log(`✅ Payment History Logs migrated: ${rawData.payment_history.length}`);
