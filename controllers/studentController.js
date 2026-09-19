@@ -27,19 +27,37 @@ function parseAndFormatDob(rawDob) {
   const parts = str.split(/[-/.]/);
   if (parts.length === 3) {
     if (parts[0].length === 4) {
-      // YYYY-MM-DD
+      // YYYY-MM-DD or YYYY-DD-MM
       const year = parts[0];
-      const month = parts[1].padStart(2, '0');
-      const day = parts[2].padStart(2, '0');
-      formattedDob = `${year}-${month}-${day}`;
-      cleanPasswordDigits = `${day}${month}${year}`;
+      let month = parseInt(parts[1], 10);
+      let day = parseInt(parts[2], 10);
+      if (month > 12 && day <= 12) {
+        const temp = month;
+        month = day;
+        day = temp;
+      }
+      if (month < 1 || month > 12) month = 1;
+      if (day < 1 || day > 31) day = 1;
+      const mStr = String(month).padStart(2, '0');
+      const dStr = String(day).padStart(2, '0');
+      formattedDob = `${year}-${mStr}-${dStr}`;
+      cleanPasswordDigits = `${dStr}${mStr}${year}`;
     } else if (parts[2].length === 4) {
-      // DD-MM-YYYY
-      const day = parts[0].padStart(2, '0');
-      const month = parts[1].padStart(2, '0');
+      // DD-MM-YYYY or MM-DD-YYYY
+      let day = parseInt(parts[0], 10);
+      let month = parseInt(parts[1], 10);
       const year = parts[2];
-      formattedDob = `${year}-${month}-${day}`;
-      cleanPasswordDigits = `${day}${month}${year}`;
+      if (month > 12 && day <= 12) {
+        const temp = month;
+        month = day;
+        day = temp;
+      }
+      if (month < 1 || month > 12) month = 1;
+      if (day < 1 || day > 31) day = 1;
+      const mStr = String(month).padStart(2, '0');
+      const dStr = String(day).padStart(2, '0');
+      formattedDob = `${year}-${mStr}-${dStr}`;
+      cleanPasswordDigits = `${dStr}${mStr}${year}`;
     }
   }
 
@@ -460,7 +478,7 @@ exports.bulkImportStudents = async (req, res) => {
       const [insertRes] = await query(
         `INSERT INTO students 
         (student_id, roll_number, name, department, academic_year, course_name, course_name_2, section, dob, gender, blood_group, father_name, mother_name, father_occupation, mother_occupation, phone, parent_phone, email, address, photo_url, password) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?)
         ON DUPLICATE KEY UPDATE 
           name = VALUES(name),
           department = VALUES(department),
@@ -478,7 +496,12 @@ exports.bulkImportStudents = async (req, res) => {
           phone = VALUES(phone),
           parent_phone = VALUES(parent_phone),
           address = VALUES(address)`,
-        [studentId, rollNumber, name, department, academicYear, courseName, courseName2, section, formattedDob, gender, bloodGroup, fatherName, motherName, fatherOccupation, motherOccupation, phone, parentPhone, email, address, hashedPassword]
+        [
+          studentId, rollNumber, name, department, academicYear,
+          courseName, courseName2, section, formattedDob, gender, bloodGroup,
+          fatherName, motherName, fatherOccupation, motherOccupation,
+          phone, parentPhone, email, address, hashedPassword
+        ]
       );
 
       let studentDbId = insertRes.insertId || insertRes.id;
